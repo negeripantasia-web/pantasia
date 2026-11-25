@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PEMANTAUAN LANGSUNG DAN PEREKAMAN TARGET  // PANTASIA</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: #030503;
+    color: #00ff41;
+    font-family: "Consolas", "Courier New", monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  }
+  /* Header Brandmark */
+  .top-bar {
+    background: #071407;
+    border-bottom: 1px solid #00ff41;
+    padding: 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .badge {
+    background: #00ff41;
+    color: #030503;
+    font-weight: bold;
+    padding: 2px 6px;
+    text-shadow: none;
+  }
+  /* Area Log Mengalir Cepat */
+  .terminal-container {
+    flex: 1;
+    padding: 10px 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    font-size: 12.5px;
+    line-height: 1.35;
+    position: relative;
+  }
+  /* Efek garis scanline monitor CRT */
+  .terminal-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.18),
+      rgba(0, 0, 0, 0.18) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+  .log-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .warn { color: #d4ff00; }
+  .crit { color: #ff3b3b; text-shadow: 0 0 6px rgba(255, 59, 59, 0.6); }
+  .dim  { color: #009e28; }
+
+  /* Footer Brandmark */
+  .bottom-bar {
+    background: #071407;
+    border-top: 1px solid #00ff41;
+    padding: 7px 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div><span class="badge">AKTIF</span> <strong>DUNIA PANTASIA // RBT_VISUAL</strong> — PEMANTAUAN LANGSUNG DAN PEREKAMAN TARGET STREAM TELEMETRI NODE-07</div>
+    <div id="stats">CPU: 94.2% | PKT/S: 14,820 | ENKRIPSI: AES-256-GCM</div>
+  </div>
+
+  <div class="terminal-container" id="log-feed"></div>
+
+  <div class="bottom-bar">
+    <span>IDENTITAS: @pantasia_rbt // RBT-DuniaPantasia</span>
+    <span id="clock">SINKRONISASI WAKTU...</span>
+  </div>
+
+<script>
+  const feed = document.getElementById("log-feed");
+  const stats = document.getElementById("stats");
+  const clock = document.getElementById("clock");
+
+  const modul = [
+    "KERNEL_NET", "PKT_SNIFFER", "DAEMON_AUTH", "MEM_ALLOC",
+    "SOCKET_IO", "TLS_HANDSHAKE", "PROXY_TUNNEL", "HEX_PARSER",
+    "NODE_SYNC", "FIREWALL_EVT", "BUFFER_FLUSH", "HASH_VERIFY"
+  ];
+
+  const pesan = [
+    "Menangkap bingkai paket masuk dari gerbang sub-jaringan",
+    "Verifikasi tanda tangan kriptografi blok memori",
+    "Mengalihkan jalur soket terenkripsi melalui simpul bayangan",
+    "Membaca register tumpukan biner pada sektor acak",
+    "Sinkronisasi tabel routing dinamis selesai tanpa latensi",
+    "Injeksi header telemetri ke saluran aliran utama",
+    "Memecah payload terkompresi menjadi fragmen 4096-byte",
+    "Mendeteksi lonjakan trafik anomali pada port internal",
+    "Menulis ulang pointer cache sementara di ruang pengguna",
+    "Validasi kunci sesi ephemeral berhasil diverifikasi"
+  ];
+
+  function hexAcak(panjang) {
+    const karakter = "0123456789ABCDEF";
+    let hasil = "";
+    for (let i = 0; i < panjang; i++) {
+      hasil += karakter[Math.floor(Math.random() * 16)];
+    }
+    return hasil;
+  }
+
+  function ipAcak() {
+    return `${Math.floor(Math.random()*223)+1}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*254)+1}`;
+  }
+
+  function buatBarisLog() {
+    const sekarang = new Date();
+    const waktu = sekarang.toTimeString().split(" ")[0] + "." + String(sekarang.getMilliseconds()).padStart(3, "0");
+    const mod = modul[Math.floor(Math.random() * modul.length)];
+    const msg = pesan[Math.floor(Math.random() * pesan.length)];
+    const tipeAcak = Math.random();
+
+    const baris = document.createElement("div");
+    baris.className = "log-line";
+
+    if (tipeAcak < 0.18) {
+      // Baris Hex Dump realistis
+      baris.classList.add("dim");
+      baris.textContent = `[${waktu}] 0x${hexAcak(8)}: ${hexAcak(4)} ${hexAcak(4)} ${hexAcak(4)} ${hexAcak(4)} ${hexAcak(4)} ${hexAcak(4)} | DUMP_MEM_${hexAcak(4)}`;
+    } else if (tipeAcak < 0.25) {
+      // Baris Peringatan Kuning
+      baris.classList.add("warn");
+      baris.textContent = `[${waktu}] [PERINGATAN] [${mod}] Latensi lonjakan terdeteksi (${Math.floor(Math.random()*90)+12}ms) -> ${ipAcak()}:${Math.floor(Math.random()*64000)+1024}`;
+    } else if (tipeAcak < 0.28) {
+      // Baris Alert Merah sesekali
+      baris.classList.add("crit");
+      baris.textContent = `[${waktu}] [INTERUPSI] [${mod}] BLOKIR PAKET TAK DIKENAL SRC=${ipAcak()} SIG=0x${hexAcak(12)}`;
+    } else {
+      // Baris aktivitas cepat normal
+      baris.textContent = `[${waktu}] [OK] [${mod}] ${msg} [${ipAcak()} -> 0x${hexAcak(6)}]`;
+    }
+
+    feed.appendChild(baris);
+
+    // Batasi jumlah elemen DOM agar browser tetap ringan meski berjalan sangat cepat
+    if (feed.children.length > 55) {
+      feed.removeChild(feed.firstChild);
+    }
+  }
+
+  // Kecepatan tinggi: 40ms per baris (~25 baris per detik)
+  setInterval(buatBarisLog, 40);
+
+  // Update telemetri header & jam setiap 300ms
+  setInterval(() => {
+    const cpu = (82 + Math.random() * 17.5).toFixed(1);
+    const pkt = Math.floor(11000 + Math.random() * 8900).toLocaleString("id-ID");
+    stats.textContent = `CPU: ${cpu}% | PKT/S: ${pkt} | NODE: PANTASIA-ID`;
+    clock.textContent = new Date().toLocaleString("id-ID") + " WIB";
+  }, 300);
+</script>
+
+</body>
+</html>
